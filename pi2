@@ -1,0 +1,38 @@
+🔧 Python2 Deprecation Readiness & Impala Wrapper Enablement on CDP 7.1.9
+Description
+
+As part of platform hardening and modernization, the EAP Engineering team completed validation and documentation efforts to safely retire Python 2 across Cloudera CDP 7.1.9 clusters. This initiative ensures alignment with Cloudera’s baseline support for Python 3.8+ and Citi’s internal Python standardization roadmap.
+
+A critical blocker was addressed by introducing a custom Impala Shell wrapper to explicitly enforce IMPALA_PYTHON_EXECUTABLE=/usr/bin/python3 and prevent breakage from legacy Python2 dependencies. A full compatibility matrix was developed and published to Confluence for engineering and app teams to reference.
+
+Key Achievements
+
+✅ Validated Python3 readiness across all major services: Cloudera Manager Agents, Hue, Beeline, Impala, and Spark 3.
+
+✅ Created an internal Confluence documentation page: “Python2 Removal on CDP 7.1.9”, covering service impact, required mitigations, and next steps.
+
+✅ Developed and tested Impala shell Python3 override wrapper, resolving shell startup issues due to default Python2 bindings.
+
+✅ Reviewed Spark 3.5 compatibility to confirm PySpark and Spark2 deprecation does not block removal.
+
+✅ Ensured no application-level dependency on Python2 exists across EAP edge or CDS nodes.
+
+Benefits to the Team
+
+📦 Enables full retirement of Python2 across CDP platforms, reducing tech debt and operational risk.
+
+🔐 Prevents shell failures and user confusion by ensuring Impala CLI uses consistent, supported Python3 path.
+
+📘 Provides a clear decision log and validation reference for downstream teams and app owners.
+
+🧪 Aligns with Cloudera’s future roadmap and internal Citi security compliance on legacy software removal.
+
+Next Steps
+
+📍 Monitor for any app team dependencies still using Python2 via Spark2 or legacy PySpark.
+
+📍 Extend wrapper logic if needed to support Kerberos ticketing or dynamic Python3 path resolution.
+
+📍 Finalize rollout plan and schedule Python2 package removal via Ansible-based automation.
+
+📍 Inform platform consumers and cluster users of the wrapper implementation and CLI usage changes.
