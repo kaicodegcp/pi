@@ -1,0 +1,101 @@
+1) Cloudera Manager + Agents + Hue
+
+Conclusion: Python 2 is not required (baseline expects Python 3.8 on RHEL8)
+
+Cloudera explicitly states CM agents and Hue require Python 3.8 on CDP Private Cloud Base 7.1.9. 
+docs.cloudera.com
++1
+
+CM 7.11.x release notes also reinforce the move to Python 3.8 for agents. 
+Cloudera Docs Archive
++1
+
+✅ Safe to remove python2 from a Cloudera requirement perspective (assuming Python 3.8 is present everywhere).
+
+2) Hive Beeline
+
+Conclusion: Beeline does not need Python 2 (it’s a JDBC CLI)
+
+Beeline is a HiveServer2 JDBC client. 
+Apache Hive
+
+✅ Removing python2 won’t affect Beeline itself.
+
+3) Impala
+
+Conclusion: Python2 not required, but impala-shell can break if it resolves the wrong python (you already addressed with wrapper)
+
+Your Ansible wrapper enforcing IMPALA_PYTHON_EXECUTABLE=/usr/bin/python3 is the right mitigation (so you don’t depend on system python). (This mitigation aligns with Cloudera guidance to point to correct python when needed.) 
+docs.cloudera.com
+
+✅ With wrapper in place, Impala client usage is protected.
+
+4) Spark on CDP 7.1.9 (the real “Python2 removal” risk area)
+
+CDP 7.1.9 can still have Spark2 in some layouts, and PySpark historically allowed Python 2.7.
+
+Cloudera notes:
+
+Spark 2.4 supports Python 2.7 (and some Python3 versions)
+
+Spark 3.1 supports Python 3.6+
+
+And they recommend setting PYSPARK_PYTHON / PYSPARK_DRIVER_PYTHON if the wrong python is picked up 
+docs.cloudera.com
+
+✅ If you are truly moving to CDS Spark 3.5 and not running Spark2/PySpark scripts that depend on python2, you’re good.
+⚠️ If any legacy Spark2 PySpark jobs still exist and rely on python2, removing python2 will break them.
+
+5) CDS / CDE Spark 3.5
+
+Conclusion: CDS Spark 3.5 aligns with Python3 (not python2)
+
+Cloudera’s Spark 3.5 requirements state Python 3.8 and higher. 
+docs.cloudera.com
+
+And CDE supports managing Python dependencies via Python virtual environments (python-env resources), which is squarely a Python3 workflow in modern deployments. 
+docs.cloudera.com
+
+✅ CDS Spark 3.5 should be compatible with removing python2, assuming your jobs/environments use python3.
+
+Final conclusion
+Safe to remove python2 IF all these are true:
+
+Python 3.8 is installed on all hosts (CM agents + Hue requirement). 
+docs.cloudera.com
+
+No production workload depends on Spark2 PySpark with python2 (validate via YARN logs/history + gateway scripts). 
+docs.cloudera.com
+
+Your impala-shell wrapper is deployed on all gateway nodes.
+
+No custom operational scripts/parcels use #!/usr/bin/python expecting python2.
+
+“No-surprises” verification checklist (what I’d run before uninstall)
+
+Run on every host (or at least: CM server, all gateways/edge, Hue hosts, master nodes):
+
+A) Find python2 packages
+
+rpm -qa | egrep -i '^(python2|python2-|.*python2)'
+
+
+B) Find python2 shebang usage (most important)
+
+grep -RIl --exclude-dir=.git -E '^#!.*python($|2\b)' \
+/opt/cloudera /usr/lib64/cmf /var/lib/cloudera-scm-agent /etc 2>/dev/null
+
+
+C) Find active python2 processes
+
+ps -ef | egrep 'python2|/usr/bin/python ' | grep -v grep
+
+
+D) Spark/PySpark safety
+
+Search your gateway job wrappers for pyspark + hardcoded python2, and ensure you explicitly set:
+
+PYSPARK_PYTHON=/usr/bin/python3
+
+PYSPARK_DRIVER_PYTHON=/usr/bin/python3
+(needed when “wrong python” is picked up).
