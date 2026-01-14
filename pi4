@@ -1,0 +1,334 @@
+🚀 1. Version Overview
+Version	Apache Spark Base	Parcel	Cloudera CDS
+CDS 3.3	Spark 3.3.x	e.g., 3.3.2-el7/el8	Older 3.x baseline
+CDS 3.5	Spark 3.5.x	e.g., 3.5.4-el7/el8 & 3.5.7	Newer LTS Spark 3.x
+
+CDS 3.5 is supported on Cloudera Runtime 7.1.9 and is the recommended upgrade path (CDS 3.3 deprecated, support until ~Aug-2026) — so planning for migrations now is prudent.
+
+📈 2. Major Feature Differences
+✅ Spark 3.3 (CDS 3.3.x)
+
+Spark 3.3 introduces:
+
+Improved SQL ANSI compliance, richer built-in SQL functions vs earlier Spark versions.
+
+Performance enhancements like Bloom filter pushdowns for joins to reduce shuffle and improve query performance.
+
+Expanded Pandas API coverage in PySpark.
+
+Maintenance, stability, bugfix upgrades (3.3.2/3.3.3).
+
+These provide a solid baseline Spark-3 experience, but the feature set is lighter compared to Spark 3.5.
+
+✅ Spark 3.5 (CDS 3.5.x)
+
+Spark 3.5 is a significant evolution with many new capabilities:
+
+✅ Spark Connect Enhancements
+
+General availability of Scala client for Spark Connect (previously limited).
+
+Distributed training & inference support via Spark Connect (e.g., PyTorch support).
+
+Structured streaming over Spark Connect support.
+
+👉 What this matters for apps: If teams leverage Spark Connect APIs (remote execution from clients), 3.5 has expanded functionality.
+
+✅ Expanded SQL & PySpark Functionality
+
+New SQL features: IDENTIFIER clause, named arguments, HyperLogLog support.
+
+New built-in functions (arrays, patterns).
+
+Python enhancements like Arrow-based Python UDF performance and better test utilities.
+
+👉 Impact: SQL code might be able to use more expressive constructs; PySpark improvements could simplify code and tests.
+
+✅ Structured Streaming & State Management
+
+New operations such as dropDuplicatesWithinWatermark.
+
+Watermark propagation improvements and better performance of RocksDB state store.
+
+👉 Impact: Streaming workloads may see reduced latency and expanded correctness guarantees.
+
+⚡ 3. Performance & Runtime Differences
+
+Cloudera claims ~20% performance improvements with Spark 3.5 over 3.3.
+
+Internal improvements in shuffle handling, adaptive execution improvements (3.x series trend extended through 3.5).
+
+🧩 4. Behavioral / API Changes Affecting Code
+
+Because there’s no single “breaking change” summary between 3.3 → 3.5 (but rather incremental from 3.3 → 3.4 → 3.5), the best guidance is to consult the official migration guides from Apache Spark:
+
+The SQL, DataFrame & Dataset migration guide lists behavioral changes between Spark 3.3 → 3.4 and Spark 3.4 → 3.5, including:
+
+JDBC/DSV2 pushdown defaults.
+
+Thrift server cancel behavior.
+
+Function behavior (e.g., array_insert negative index behavior).
+
+Key categories where code may break or behave differently:
+
+✅ SQL behavior changes
+
+Function behavior modifications.
+
+Changes to default JDBC/DSV2 pushdowns.
+
+✅ Configuration defaults
+
+New defaults that alter query plans or optimization tradeoffs.
+
+✅ Streaming
+
+Deprecation notices and behavior changes (from intermediate releases like 3.4).
+
+✅ PySpark API
+
+Changes to error classes, new UDF behaviors and testing utilities.
+
+✅ Spark Connect
+
+Expanded support meaning previously unsupported patterns in 3.3 may now be supported in 3.5.
+
+🛠 5. Compatibility & Migration Considerations
+✅ Code & Build
+
+Recompile JVM (Scala/Java) apps against Spark 3.5 libs if you use typed APIs or include Spark as a dependency.
+
+Python applications should be tested for new SQL/UDF behaviors and defaults.
+
+✅ Dependencies
+
+Ensure that any third-party connectors/libraries (e.g., Iceberg, Delta) support Spark 3.5 versions. Compatibility with Spark 3.3 class versions may differ.
+
+📝 6. Possible Breaking Areas for App Teams
+Area	Likely Impact	Action for Teams
+SQL semantics & defaults	Possible changed function behaviors	Test SQL queries, update logic
+PySpark error classes	Exceptions have changed error classes	Review catch/exception handling
+Spark Connect usage	New capabilities, some deprecated patterns	Test client integrations
+Structured Streaming	New operators, config defaults	Validate streaming jobs
+Config defaults	Different pushdown/optimizer defaults	Review configs in spark-defaults
+✅ Summary of What Teams Must Know
+
+✅ New features they can leverage
+
+Better SQL functions, structured streaming semantics, Spark Connect expansion.
+
+✅ Areas to test
+
+SQL correctness with new defaults.
+
+PySpark behavior especially around UDFs.
+
+Streaming job behavior with watermarks & dedup modifications.
+
+✅ Action items
+
+Recompile JVM based code.
+
+Revalidate configs and defaults.
+
+Update any legacy syntax usage flagged in migration guides.
+
+
+
+
+
+
+
+
+Running Spark 3.3 Jobs on Spark 3.5 (Cloudera CDS)
+
+Applies To
+
+CDS Spark 3.3.x → CDS Spark 3.5.x
+
+Parcels enabled:
+
+SPARK3-3.3.2 / 3.3.3 (el7/el8)
+
+SPARK3-3.5.4 / 3.5.7 (el7/el8)
+
+Running Spark 3.3 applications on Spark 3.5 is supported, but teams must validate behavior and dependencies due to SQL, configuration, and API changes introduced across Spark 3.4 and 3.5.
+
+✅ What Might Work (Without Code Changes)
+🔹 Core Spark APIs
+
+Standard RDD, DataFrame, and Dataset operations continue to work.
+
+Most transformations (select, filter, join, groupBy, agg) behave the same.
+
+Job submission patterns (spark-submit, Airflow, Oozie, CDS UI/API) remain unchanged.
+
+🔹 Language Compatibility
+Component	Spark 3.3	Spark 3.5
+Scala	2.12 / 2.13	2.12 / 2.13
+Java	8 / 11	8 / 11
+Python	3.7–3.9	3.8–3.11 (Cloudera-supported)
+
+✅ Most PySpark jobs continue to run as-is, provided they do not rely on deprecated behavior.
+
+🔹 Basic SQL Queries
+
+Simple SELECT, INSERT, CTAS, and aggregation queries work unchanged.
+
+ANSI SQL is still supported (but stricter in 3.5 — see below).
+
+Hive Metastore access remains compatible.
+
+⚠️ What Might Break (Important for App Teams)
+🔸 SQL Behavior Changes (Most Common Impact)
+
+Spark 3.5 introduces stricter SQL semantics:
+
+ANSI mode enforcement
+
+Division by zero
+
+Invalid casts
+
+Overflow errors
+
+Null-handling changes
+
+Some expressions return different results vs Spark 3.3
+
+Function behavior changes
+
+array_insert, date_add, timestamp functions
+
+Identifier resolution rules
+
+📌 Impact:
+Queries that “worked accidentally” in Spark 3.3 may now fail or return different results.
+
+🔸 Configuration Default Changes
+
+Several optimizer and pushdown settings changed defaults between 3.3 → 3.5:
+
+JDBC pushdown behavior
+
+Adaptive Query Execution (AQE) refinements
+
+Join strategy selection
+
+📌 Impact:
+Jobs may run faster, but execution plans may differ — validate performance-sensitive workloads.
+
+🔸 PySpark Behavior Changes
+
+Improved Arrow-based execution may expose type mismatches.
+
+Error handling now uses structured error classes.
+
+Some deprecated PySpark APIs removed.
+
+📌 Impact:
+Custom exception handling or UDF logic may need updates.
+
+🔸 Streaming Jobs
+
+Structured Streaming changes across 3.4 & 3.5 include:
+
+New watermark behavior
+
+dropDuplicatesWithinWatermark
+
+Improved RocksDB state store
+
+📌 Impact:
+Streaming jobs must be regression tested — semantics may differ.
+
+🔸 Dependency & Build Compatibility (Very Important)
+
+JARs compiled against Spark 3.3 are not guaranteed binary-compatible with Spark 3.5.
+
+Third-party libraries (Iceberg, Delta, Kafka clients) must support Spark 3.5.
+
+📌 Impact:
+JVM-based apps should be recompiled against Spark 3.5.
+
+🛠 Recommendations (Mandatory for Migration)
+✅ 1. Test in Lower Environment
+
+Run Spark 3.3 jobs on a Spark 3.5 CDS test cluster
+
+Compare:
+
+Row counts
+
+Aggregates
+
+Null handling
+
+Streaming outputs
+
+✅ 2. Review SQL Carefully
+
+Validate SQL logic under stricter ANSI behavior
+
+Watch for:
+
+Cast failures
+
+Divide-by-zero
+
+Timestamp parsing
+
+💡 Tip: Temporarily disable ANSI mode only if required, but long-term fixes are recommended.
+
+✅ 3. Recompile JVM Applications
+
+Rebuild Scala/Java jobs using:
+
+Spark 3.5 dependencies
+
+Correct Scala version (2.12 or 2.13)
+
+Validate shaded JAR dependencies.
+
+✅ 4. Validate Third-Party Libraries
+
+Confirm Spark 3.5 support for:
+
+Iceberg
+
+Delta Lake
+
+Custom JDBC connectors
+
+ML libraries
+
+✅ 5. Performance Validation
+
+Expect ~15–20% performance improvement
+
+Validate memory usage and shuffle behavior
+
+Review execution plans (explain)
+
+📌 Summary for Application Teams
+Area	Action Required
+Basic Spark APIs	Usually no change
+SQL logic	Must be validated
+PySpark jobs	Test UDFs & errors
+Streaming	Mandatory testing
+JVM jobs	Recompile required
+Dependencies	Version check required
+✅ Bottom Line
+
+Spark 3.5 is not a drop-in replacement for Spark 3.3 — but migration is manageable with testing.
+
+Application teams should:
+
+Validate SQL correctness
+
+Recompile JVM jobs
+
+Test streaming workloads
+
+Confirm dependency compatibility
