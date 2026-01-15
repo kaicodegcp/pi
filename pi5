@@ -1,0 +1,40 @@
+🚀 CDS 3.5.4 Deployment to UAT & Spark 3.5 Validation with Multi-Python Support
+Description
+
+This week, the EAP Engineering team successfully deployed the Cloudera Data Services (CDS) 3.5.4 parcel (1.5.5-h107) to the UAT Fish Taco cluster (CDP 7.1.9), marking a critical milestone in Spark modernization efforts. Following deployment, an extensive validation was completed across Python 3.8, 3.9, and 3.11 environments to ensure compatibility for PySpark jobs.
+
+In parallel, key artifacts including the Spark 3.3 vs 3.5 Delta Matrix, Migration Checklist, and Application Impact Notes were published to the internal Confluence space to enable seamless transition for application teams.
+
+✅ Key Achievements
+
+📦 Deployed CDS 3.5.4 parcels to UAT (CDP 7.1.9) for Spark-based workloads.
+
+🧪 Validated PySpark compatibility with Python 3.8, 3.9, and 3.11:
+
+Verified successful job runs across environments.
+
+Ensured CDS Spark and Python integration is stable and production-ready.
+
+📝 Published internal Confluence pages to support application teams:
+
+Spark 3.3 vs Spark 3.5 Key Differences
+
+Migration Checklist: CDS 3.3 → 3.5
+
+Regression Test Plan & Diff Matrix
+
+🎯 Benefits to the Platform & App Teams
+
+Enables modern PySpark development with expanded syntax, Arrow UDF support, and HyperLogLog in Spark 3.5.
+
+Reduces long-term risk by aligning with Cloudera’s recommended upgrade path (CDS 3.3 EOL by Aug 2026).
+
+Empowers application teams with ready documentation and migration guidance, reducing onboarding time.
+
+📌 Next Steps
+
+🧪 Final round of validations and soak tests in UAT.
+
+🚀 Plan & execute Production rollout post UAT sign-off.
+
+📣 Share a formal migration advisory to all app teams with Python version upgrade guidance.
