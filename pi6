@@ -1,0 +1,7 @@
+For Python 3.8
+export PYSPARK_PYTHON=/usr/bin/python3.8
+export PYSPARK_DRIVER_PYTHON=/usr/bin/python3.8
+
+🔹 For Python 3.11
+export PYSPARK_PYTHON=/usr/bin/python3.11
+export PYSPARK_DRIVER_PYTHON=/usr/bin/python3.11
